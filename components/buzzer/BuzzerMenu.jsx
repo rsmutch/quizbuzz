@@ -8,9 +8,10 @@ import { firebase } from '../../src/firebaseConfig';
 import { createRoom, joinRoom } from './NetworkFuncs';
 
 const usersRef = firebase.firestore().collection('users');
+const gamesRef = firebase.firestore().collection('games');
 
 const Buzzer = (props) => {
-  const [user, setUser] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [roomCode, setRoomCode] = useState('');
 
@@ -19,13 +20,32 @@ const Buzzer = (props) => {
       .doc(firebase.auth().currentUser.uid)
       .get()
       .then((doc) => {
-        setUser(doc.data());
+        setCurrentUser(doc.data());
         setIsLoading(false);
       })
       .catch((err) => {
         console.log(err);
       });
   }, []);
+
+  const deleteAllGames = () => {
+    gamesRef
+      .get()
+      .then((querySnapshot) => {
+        let batch = firebase.firestore().batch();
+        querySnapshot.forEach((doc) => {
+          batch.delete(doc.ref);
+        });
+
+        batch.commit();
+      })
+      .then(() => {
+        console.log('deleted');
+      })
+      .catch((err) => {
+        console.err(err);
+      });
+  };
 
   const { navigation } = props;
 
@@ -41,7 +61,7 @@ const Buzzer = (props) => {
       <Button
         mode="contained"
         onPress={() => {
-          createRoom(navigation, user);
+          createRoom(navigation, currentUser);
         }}
       >
         Create room
@@ -56,12 +76,18 @@ const Buzzer = (props) => {
       <Button
         mode="contained"
         onPress={() => {
-          joinRoom(navigation, user, roomCode);
+          joinRoom(navigation, currentUser, roomCode);
         }}
       >
         Join room
       </Button>
-      <Text>{user.name}</Text>
+      <Button
+        onPress={() => {
+          deleteAllGames();
+        }}
+      >
+        Delete All Rooms
+      </Button>
     </View>
   );
 };

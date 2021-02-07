@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import { firebase } from './src/firebaseConfig';
 
-import { Provider } from 'react-redux';
+import { Provider as StoreProvider } from 'react-redux';
 import { applyMiddleware, createStore } from 'redux';
 import rootReducer from './redux/reducers';
 import thunk from 'redux-thunk';
@@ -25,6 +25,7 @@ import BuzzersScreen from './components/buzzer/Buzzers';
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { View, Text } from 'react-native';
+import { Provider as PaperProvider } from 'react-native-paper';
 
 const Stack = createStackNavigator();
 
@@ -66,42 +67,45 @@ export default function App({ navigation }) {
     );
   }
   return (
-    <Provider store={store}>
-      <NavigationContainer>
-        <Stack.Navigator initialRouteName="Landing">
-          <Stack.Screen
-            name="Main"
-            component={MainScreen}
-            options={{ headerShown: false }}
-          />
+    <StoreProvider store={store}>
+      <PaperProvider>
+        <NavigationContainer>
+          <Stack.Navigator initialRouteName="Landing">
+            {/*Landing*/}
+            <Stack.Screen
+              name="Main"
+              component={MainScreen}
+              options={{ headerShown: false }}
+            />
 
-          <Stack.Screen
-            name="Add"
-            component={AddScreen}
-            navigation={navigation}
-          />
-          <Stack.Screen
-            name="Save"
-            component={SaveScreen}
-            navigation={navigation}
-          />
-          <Stack.Screen
-            name="BuzzerMenu"
-            component={BuzzerMenuScreen}
-            navigation={navigation}
-          />
-          <Stack.Screen
-            name="WaitingRoom"
-            component={WaitingRoomScreen}
-            navigation={navigation}
-          />
-          <Stack.Screen
-            name="Buzzers"
-            component={BuzzersScreen}
-            navigation={navigation}
-          />
-        </Stack.Navigator>
-      </NavigationContainer>
-    </Provider>
+            <Stack.Screen
+              name="Add"
+              component={AddScreen}
+              navigation={navigation}
+            />
+            <Stack.Screen
+              name="Save"
+              component={SaveScreen}
+              navigation={navigation}
+            />
+            <Stack.Screen
+              name="BuzzerMenu"
+              component={BuzzerMenuScreen}
+              navigation={navigation}
+            />
+            <Stack.Screen
+              name="WaitingRoom"
+              component={WaitingRoomScreen}
+              navigation={navigation}
+            />
+            <Stack.Screen
+              name="Buzzers"
+              component={BuzzersScreen}
+              navigation={navigation}
+            />
+          </Stack.Navigator>
+        </NavigationContainer>
+      </PaperProvider>
+    </StoreProvider>
   );
 }
