@@ -17,6 +17,7 @@ import MainScreen from './components/Main';
 import AddScreen from './components/main/Add';
 import SaveScreen from './components/main/Save';
 import LoginScreen from './components/auth/Login';
+import LeaderboardScreen from './components/LeaderboardScreen';
 
 import WaitingRoomScreen from './components/buzzer/WaitingRoom';
 import BuzzerMenuScreen from './components/buzzer/BuzzerMenu';
@@ -101,6 +102,11 @@ export default function App({ navigation }) {
             <Stack.Screen
               name="Buzzers"
               component={BuzzersScreen}
+              navigation={navigation}
+            />
+            <Stack.Screen
+              name="Leaderboard"
+              component={LeaderboardScreen}
               navigation={navigation}
             />
           </Stack.Navigator>

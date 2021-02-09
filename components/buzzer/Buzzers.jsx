@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Button, Portal, Modal } from 'react-native-paper';
 import { firebase } from '../../src/firebaseConfig';
-import LeaderboardModal from './LeaderboardModal';
+import ConfirmExit from '../ConfirmExit';
+import LeaderboardModal from '../LeaderboardModal';
 
 const Buzzers = ({
   navigation,
@@ -22,6 +23,7 @@ const Buzzers = ({
   const [hasBuzzed, setHasBuzzed] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showConfirmExit, setShowConfirmExit] = useState(false);
 
   const gameRef = firebase.firestore().collection('games').doc(gameId);
   const playersRef = gameRef.collection('users');
@@ -54,7 +56,7 @@ const Buzzers = ({
     }
   };
 
-  const handleModal = () => {
+  const handleShowLeaderboard = () => {
     setShowLeaderboard(!showLeaderboard);
   };
 
@@ -69,47 +71,98 @@ const Buzzers = ({
     gameRef.update({ buzzed: null });
   };
 
+  const handleShowConfirmExit = () => {
+    setShowConfirmExit(!showConfirmExit);
+  };
+
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+    <View style={styles.container}>
       <Portal>
         <LeaderboardModal
-          handleModal={handleModal}
+          handleShowLeaderboard={handleShowLeaderboard}
           showLeaderboard={showLeaderboard}
           gameId={gameId}
           currentUser={currentUser}
         />
+        <ConfirmExit
+          handleShowConfirmExit={handleShowConfirmExit}
+          showConfirmExit={showConfirmExit}
+          gameId={gameId}
+          currentUser={currentUser}
+          navigation={navigation}
+        />
       </Portal>
-      <Text style={{ flex: 1 }}>{buzzedUser.username}</Text>
-      <Button disabled={hasBuzzed} mode="contained" onPress={handleBuzz}>
-        BUZZER
-      </Button>
-      {isHost && <Text style={{ flex: 1 }}>I AM THE HOST</Text>}
+      {/* {isHost && (
+        <View style={styles.hostOrNotContainer}>
+          <Text>I AM THE HOST</Text>
+        </View>
+      )} */}
+      <View style={styles.whoBuzzedContainer}>
+        <Text style={styles.whoBuzzed}>
+          {buzzedUser.username && buzzedUser.username.toUpperCase()}
+        </Text>
+      </View>
       {isHost && (
         <>
-          <View style={{ flexDirection: 'row' }}>
+          <View style={styles.correctOrNotContainer}>
             <Button
+              style={styles.correctOrNotButtons}
               icon="check"
               mode="contained"
               disabled={!hasBuzzed}
               onPress={handleCorrect}
             />
             <Button
+              style={styles.correctOrNotButtons}
               icon="close"
               mode="contained"
               disabled={!hasBuzzed}
               onPress={handleIncorrect}
             />
           </View>
-          <Button style={{ flex: 1 }} mode="contained">
-            End Game
-          </Button>
+          <View style={styles.endGameBtnContainer}>
+            <Button mode="contained" onPress={handleShowConfirmExit}>
+              End Game
+            </Button>
+          </View>
         </>
       )}
-      <Button style={{ flex: 1 }} onPress={handleModal}>
-        Leaderboard
-      </Button>
+      <View style={styles.lbToggleContainer}>
+        <Button onPress={handleShowLeaderboard}>Leaderboard</Button>
+      </View>
+      <View style={styles.buzzerBtnContainer}>
+        <Button disabled={hasBuzzed} mode="contained" onPress={handleBuzz}>
+          BUZZER
+        </Button>
+      </View>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  whoBuzzedContainer: {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 5
+  },
+  whoBuzzed: { fontSize: 50 },
+  hostOrNotContainer: { flex: 1 },
+  correctOrNotContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  correctOrNotButtons: {
+    margin: 5,
+    paddingLeft: 15
+  },
+  endGameBtnContainer: { flex: 1 },
+  lbToggleContainer: { flex: 1 },
+  buzzerBtnContainer: { flex: 1 }
+});
 
 export default Buzzers;

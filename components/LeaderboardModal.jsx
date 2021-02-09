@@ -1,20 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import { Text, Button, Modal } from 'react-native-paper';
-import { firebase } from '../../src/firebaseConfig';
+import { firebase } from '../src/firebaseConfig';
 import Leaderboard from 'react-native-leaderboard';
 
 const LeaderboardModal = ({
-  handleModal,
+  handleShowLeaderboard,
   showLeaderboard,
   gameId,
   currentUser
 }) => {
   const [gameScoreData, setGameScoreData] = useState([]);
-  const gameRef = firebase.firestore().collection('games').doc(gameId);
-  const playersRef = gameRef.collection('users');
-  const containerStyle = { backgroundColor: 'white', padding: 20 };
+
   useEffect(() => {
+    const playersRef = firebase
+      .firestore()
+      .collection('games')
+      .doc(gameId)
+      .collection('users');
+
     const getScores = playersRef.onSnapshot((players) => {
       const playersArray = [];
       players.forEach((player) => {
@@ -26,12 +30,14 @@ const LeaderboardModal = ({
   return (
     <Modal
       visible={showLeaderboard}
-      onDismiss={handleModal}
+      onDismiss={handleShowLeaderboard}
       contentContainerStyle={containerStyle}
     >
       <Leaderboard data={gameScoreData} sortBy="score" labelBy="username" />
     </Modal>
   );
 };
+
+const containerStyle = { backgroundColor: 'white', padding: 20 };
 
 export default LeaderboardModal;

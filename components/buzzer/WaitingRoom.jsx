@@ -32,7 +32,7 @@ const WaitingRoom = ({
       if (doc.data().gameIsActive) {
         showUsers();
         startGame();
-        alert('game started!');
+        // alert('game started!');
         navigation.navigate('Buzzers', {
           gameId,
           currentUser
