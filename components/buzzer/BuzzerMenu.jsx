@@ -1,14 +1,13 @@
 import React from 'react';
 import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
-import { TextInput, Button, Divider } from 'react-native-paper';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { TextInput, Button, Divider, Modal } from 'react-native-paper';
 
 import { firebase } from '../../src/firebaseConfig';
 
 import { createRoom, joinRoom } from './NetworkFuncs';
 
 const usersRef = firebase.firestore().collection('users');
-const gamesRef = firebase.firestore().collection('games');
 
 const Buzzer = (props) => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -28,25 +27,6 @@ const Buzzer = (props) => {
       });
   }, []);
 
-  const deleteAllGames = () => {
-    gamesRef
-      .get()
-      .then((querySnapshot) => {
-        let batch = firebase.firestore().batch();
-        querySnapshot.forEach((doc) => {
-          batch.delete(doc.ref);
-        });
-
-        batch.commit();
-      })
-      .then(() => {
-        console.log('deleted');
-      })
-      .catch((err) => {
-        console.err(err);
-      });
-  };
-
   const { navigation } = props;
 
   if (isLoading) {
@@ -57,7 +37,7 @@ const Buzzer = (props) => {
     );
   }
   return (
-    <View>
+    <View style={styles.container}>
       <Button
         mode="contained"
         onPress={() => {
@@ -70,13 +50,14 @@ const Buzzer = (props) => {
       <TextInput
         style={{ margin: 20 }}
         mode="outlined"
+        autoCapitalize="characters"
         onChangeText={(text) => setRoomCode(text)}
         value={roomCode}
       />
       <Button
         mode="contained"
         onPress={() => {
-          joinRoom(navigation, currentUser, roomCode);
+          joinRoom(navigation, currentUser, roomCode.toUpperCase());
         }}
       >
         Join room
@@ -91,5 +72,11 @@ const Buzzer = (props) => {
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1
+  }
+});
 
 export default Buzzer;

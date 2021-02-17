@@ -2,13 +2,16 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Text, Button, Modal } from 'react-native-paper';
 
+import { firebase } from '../src/firebaseConfig';
+
 const ConfirmExit = ({
   handleShowConfirmExit,
   showConfirmExit,
   gameId,
-  currentUser,
-  navigation
+  currentUser
 }) => {
+  const gameRef = firebase.firestore().collection('games').doc(gameId);
+
   return (
     <Modal
       visible={showConfirmExit}
@@ -25,7 +28,7 @@ const ConfirmExit = ({
           mode="contained"
           onPress={() => {
             handleShowConfirmExit();
-            navigation.navigate('Leaderboard', { gameId, currentUser });
+            gameRef.update({ gameIsActive: false });
           }}
         />
         <Button

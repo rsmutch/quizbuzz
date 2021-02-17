@@ -33,7 +33,9 @@ export const joinRoom = (navigation, currentUser, roomCode) => {
                 .set({
                   ...currentUser,
                   score: 0,
-                  isHost: false
+                  isHost: false,
+                  quizMaster: false,
+                  team: null
                 });
               navigation.navigate('WaitingRoom', {
                 currentUser,
@@ -84,11 +86,14 @@ export const addHost = (navigation, currentUser, gameId, roomCode) => {
     .set({
       ...currentUser,
       score: 0,
-      isHost: true
+      team: null,
+      isHost: true,
+      quizMaster: true
     });
   navigation.navigate('WaitingRoom', {
     currentUser,
     gameId,
-    roomCode
+    roomCode,
+    isHost: true
   });
 };

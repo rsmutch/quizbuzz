@@ -26,7 +26,10 @@ import BuzzersScreen from './components/buzzer/Buzzers';
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { View, Text } from 'react-native';
-import { Provider as PaperProvider } from 'react-native-paper';
+import {
+  Provider as PaperProvider,
+  ActivityIndicator
+} from 'react-native-paper';
 
 const Stack = createStackNavigator();
 
@@ -47,7 +50,7 @@ export default function App({ navigation }) {
   if (!loaded) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-        <Text>Loading...</Text>
+        <ActivityIndicator animating={true} />
       </View>
     );
   }
@@ -103,6 +106,7 @@ export default function App({ navigation }) {
               name="Buzzers"
               component={BuzzersScreen}
               navigation={navigation}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="Leaderboard"

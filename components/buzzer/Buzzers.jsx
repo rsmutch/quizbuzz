@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, BackHandler, Alert } from 'react-native';
 import { Button, Portal, Modal } from 'react-native-paper';
 import { firebase } from '../../src/firebaseConfig';
 import ConfirmExit from '../ConfirmExit';
@@ -19,7 +19,7 @@ const Buzzers = ({
   //   username: 'ringo'
   // };
 
-  const [buzzedUser, setBuzzedUser] = useState({});
+  const [buzzedUser, setBuzzedUser] = useState({ userColour: 'white' });
   const [hasBuzzed, setHasBuzzed] = useState(false);
   const [isHost, setIsHost] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -27,6 +27,15 @@ const Buzzers = ({
 
   const gameRef = firebase.firestore().collection('games').doc(gameId);
   const playersRef = gameRef.collection('users');
+
+  const whoBuzzedContainer = {
+    flex: 1,
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 5,
+    backgroundColor: buzzedUser.userColour
+  };
 
   useEffect(() => {
     playersRef
@@ -37,17 +46,40 @@ const Buzzers = ({
           setIsHost(true);
         }
       });
-    const whoBuzzed = gameRef.onSnapshot((doc) => {
+    const listener = gameRef.onSnapshot((doc) => {
       const buzzUser = doc.data().buzzed;
       if (buzzUser) {
         setShowLeaderboard(false);
         setBuzzedUser(buzzUser);
         setHasBuzzed(true);
       } else if (buzzUser === null) {
-        setBuzzedUser({});
+        setBuzzedUser({ userColour: 'white' });
         setHasBuzzed(false);
       }
+
+      const gameIsActive = doc.data().gameIsActive;
+      if (!gameIsActive) {
+        listener();
+        navigation.navigate('Leaderboard', { gameId, currentUser });
+      }
     });
+
+    const backAction = () => {
+      Alert.alert('Hold on!', 'Are you sure you want to leave?', [
+        {
+          text: 'Cancel',
+          onPress: () => null,
+          style: 'cancel'
+        },
+        { text: 'YES', onPress: () => navigation.navigate('Main') }
+      ]);
+      return true;
+    };
+
+    const backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      backAction
+    );
   }, []);
 
   const handleBuzz = () => {
@@ -92,12 +124,7 @@ const Buzzers = ({
           navigation={navigation}
         />
       </Portal>
-      {/* {isHost && (
-        <View style={styles.hostOrNotContainer}>
-          <Text>I AM THE HOST</Text>
-        </View>
-      )} */}
-      <View style={styles.whoBuzzedContainer}>
+      <View style={whoBuzzedContainer}>
         <Text style={styles.whoBuzzed}>
           {buzzedUser.username && buzzedUser.username.toUpperCase()}
         </Text>
@@ -140,13 +167,11 @@ const Buzzers = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  whoBuzzedContainer: {
+  container: {
     flex: 1,
-    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 5
+    marginTop: 50
   },
   whoBuzzed: { fontSize: 50 },
   hostOrNotContainer: { flex: 1 },
