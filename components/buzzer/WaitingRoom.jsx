@@ -1,6 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, Pressable } from 'react-native';
-import { Text, DataTable, FAB, Portal, Button } from 'react-native-paper';
+import { View, StyleSheet, Pressable, Image } from 'react-native';
+import {
+  Text,
+  DataTable,
+  FAB,
+  Portal,
+  Button,
+  Divider
+} from 'react-native-paper';
 import { firebase } from '../../src/firebaseConfig';
 import AddTeam from '../AddTeam';
 import ColourPicker from '../ColourPicker';
@@ -64,6 +71,9 @@ const WaitingRoom = ({
       teams.forEach((team) => {
         currentTeams.push(team.data());
       });
+      if (!currentTeams.includes(currentTeam.name)) {
+        setCurrentTeam('');
+      }
       setTeams(currentTeams);
     });
   }, []);
@@ -93,7 +103,6 @@ const WaitingRoom = ({
   };
 
   const handleJoinTeam = (team) => {
-    console.log(team);
     setCurrentTeam(team);
     playersRef
       .doc(currentUser.id)
@@ -109,6 +118,24 @@ const WaitingRoom = ({
           .doc(team)
           .update({ playerCount: firebase.firestore.FieldValue.increment(1) });
         playersRef.doc(currentUser.id).update({ team });
+      });
+  };
+
+  const deleteTeam = (team) => {
+    console.log(team);
+    playersRef
+      .where('team', '==', team)
+      .get()
+      .then((res) => {
+        let batch = firebase.firestore().batch();
+        res.docs.forEach((doc) => {
+          const docRef = playersRef.doc(doc.id);
+          batch.update(docRef, { team: null });
+        });
+        batch.commit().then(() => {
+          console.log(`updated all documents`);
+          teamsRef.doc(team).delete();
+        });
       });
   };
 
@@ -128,55 +155,95 @@ const WaitingRoom = ({
         />
       </Portal>
       <Text style={styles.roomCode}>{roomCode}</Text>
-      {teams.length > 0 && (
-        <DataTable>
-          <DataTable.Header>
-            <DataTable.Title style={{ flex: 1 }}>Join</DataTable.Title>
-            <DataTable.Title style={{ flex: 2 }}>Name</DataTable.Title>
-            <DataTable.Title style={{ flex: 1 }}>Players</DataTable.Title>
-          </DataTable.Header>
-
+      {teams.length > 0 ? (
+        <>
+          <Text style={{ alignSelf: 'flex-start', fontSize: 25 }}>Teams</Text>
           {teams.map((team) => {
             return (
-              <DataTable.Row key={team.name}>
-                <View style={{ flex: 1, marginRight: 20 }}>
-                  {team.name !== currentTeam && (
-                    <Pressable
-                      style={styles.joinButton}
-                      onPress={() => handleJoinTeam(team.name)}
-                    >
-                      <Text style={styles.joinButtonText}>+</Text>
-                    </Pressable>
+              <>
+                <View style={styles.teamHeader} key={team.name}>
+                  <Text style={styles.teamHeaderName}>{team.name}</Text>
+                  <View style={styles.teamHeaderJoinContainer}>
+                    {team.name !== currentTeam && (
+                      <Pressable
+                        style={styles.teamHeaderJoin}
+                        onPress={() => handleJoinTeam(team.name)}
+                      >
+                        <Text style={styles.teamHeaderJoinText}>Join Team</Text>
+                      </Pressable>
+                    )}
+                  </View>
+                  <Text style={styles.teamHeaderPlayerCount}>
+                    {`${team.playerCount} player` +
+                      (team.playerCount !== 1 ? 's' : '')}
+                  </Text>
+                  {isHost && (
+                    <View style={styles.teamHeaderDeleteContainer}>
+                      <Pressable
+                        style={styles.teamHeaderDelete}
+                        onPress={() => {
+                          deleteTeam(team.name);
+                        }}
+                      >
+                        <Text style={styles.teamHeaderDeleteText}>X</Text>
+                      </Pressable>
+                    </View>
                   )}
                 </View>
-                <DataTable.Cell style={{ flex: 5 }}>{team.name}</DataTable.Cell>
-                <DataTable.Cell style={{ flex: 1 }}>
-                  {team.playerCount}
-                </DataTable.Cell>
-              </DataTable.Row>
+                <Divider style={{ height: 5 }} />
+                {users.map((user) => {
+                  if (user.team === team.name) {
+                    return (
+                      <View key={user.id} style={styles.userRow}>
+                        {/* <Image
+                          styles={styles.avatar}
+                          source={require('../../assets/avatar.jpg')}
+                        /> */}
+                        <Text style={styles.userRowUsername}>
+                          {user.username}
+                        </Text>
+                      </View>
+                    );
+                  }
+                })}
+              </>
             );
           })}
-        </DataTable>
+          <View style={styles.teamHeader}>
+            <Text style={styles.teamHeaderName}>No team</Text>
+          </View>
+          {users.map((user) => {
+            if (user.team === null) {
+              return (
+                <View key={user.id} style={styles.userRow}>
+                  {/* <Image
+                    styles={styles.avatar}
+                    source={require('../../assets/avatar.jpg')}
+                  /> */}
+                  <Text style={styles.userRowUsername}>{user.username}</Text>
+                </View>
+              );
+            }
+          })}
+        </>
+      ) : (
+        <>
+          {users.map((user) => {
+            if (user.team === null) {
+              return (
+                <View key={user.id} style={styles.userRow}>
+                  {/* <Image
+                    styles={styles.avatar}
+                    source={require('../../assets/avatar.jpg')}
+                  /> */}
+                  <Text style={styles.userRowUsername}>{user.username}</Text>
+                </View>
+              );
+            }
+          })}
+        </>
       )}
-      <DataTable>
-        <DataTable.Header>
-          <DataTable.Title>Image</DataTable.Title>
-          <DataTable.Title>Name</DataTable.Title>
-          <DataTable.Title>Team</DataTable.Title>
-        </DataTable.Header>
 
-        {users.map((user) => {
-          return (
-            <DataTable.Row key={user.id}>
-              <DataTable.Cell style={{ flex: 1 }}></DataTable.Cell>
-              <DataTable.Cell style={{ flex: 5 }}>
-                {user.username}
-              </DataTable.Cell>
-              <DataTable.Cell style={{ flex: 1 }}>{user.team}</DataTable.Cell>
-            </DataTable.Row>
-          );
-        })}
-      </DataTable>
       <View style={{ flexDirection: 'row' }}>
         <View
           style={{
@@ -215,7 +282,15 @@ const styles = StyleSheet.create({
   roomCode: {
     fontSize: 40
   },
-  joinButton: {
+  teamHeader: {
+    flexDirection: 'row',
+    height: 20
+  },
+  teamHeaderJoinContainer: {
+    flex: 1
+  },
+  teamHeaderJoin: {
+    flex: 1,
     width: '100%',
     height: '100%',
     borderRadius: 25,
@@ -223,9 +298,48 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center'
   },
-  joinButtonText: {
+  teamHeaderJoinText: {
     fontWeight: 'bold',
     color: 'white'
+  },
+  teamHeaderName: {
+    textAlign: 'center',
+    fontWeight: 'bold',
+    flex: 1
+  },
+  teamHeaderPlayerCount: {
+    textAlign: 'center',
+    flex: 1
+  },
+  teamHeaderDeleteContainer: {
+    flex: 0.25
+  },
+  teamHeaderDelete: {
+    flex: 1,
+    width: '100%',
+    height: '100%',
+    borderRadius: 25,
+    backgroundColor: 'blueviolet',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  teamHeaderDeleteText: {
+    fontWeight: 'bold',
+    color: 'white'
+  },
+  userRow: {
+    flexDirection: 'row'
+    // width: '100%'
+  },
+  // avatar: {
+  //   flex: 1,
+  //   height: undefined,
+  //   width: undefined,
+  //   resizeMode: 'contain'
+  // },
+  userRowUsername: {
+    flex: 5,
+    fontSize: 25
   }
 });
 

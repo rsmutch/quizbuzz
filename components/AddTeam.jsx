@@ -10,7 +10,8 @@ const AddTeam = ({ showAddTeam, setShowAddTeam, gameId }) => {
   const teamsRef = gameRef.collection('teams');
 
   const postTeam = () => {
-    if (teamName) {
+    const regex = /.*\S.*/;
+    if (regex.test(teamName)) {
       teamsRef
         .doc(teamName)
         .set({ name: teamName, playerCount: 0, score: 0 })
@@ -21,20 +22,14 @@ const AddTeam = ({ showAddTeam, setShowAddTeam, gameId }) => {
     } else {
       console.log('empty string');
     }
-    // gameRef
-    //   .update({ teams: firebase.firestore.FieldValue.arrayUnion(teamName) })
-    //   .then(() => {
-    //     setTeamAdded(true);
-    //     setTeamName('');
-    //   })
-    //   .catch((err) => {
-    //     console.log(err);
-    //   });
   };
   return (
     <Modal
       visible={showAddTeam}
-      onDismiss={() => setShowAddTeam(false)}
+      onDismiss={() => {
+        setTeamAdded(false);
+        setShowAddTeam(false);
+      }}
       contentContainerStyle={containerStyle}
     >
       <Text>New Team</Text>
