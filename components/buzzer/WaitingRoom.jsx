@@ -15,11 +15,12 @@ import ColourPicker from '../ColourPicker';
 const WaitingRoom = ({
   navigation,
   route: {
-    params: { currentUser, gameId, roomCode, isHost }
+    params: { currentUser, gameId, roomCode }
   }
 }) => {
   const [users, setUsers] = useState([]);
   const [host, setHost] = useState('');
+  const [isHost, setIsHost] = useState(false);
   const [showColourPicker, setShowColourPicker] = useState(false);
   const [showAddTeam, setShowAddTeam] = useState(false);
   const [teams, setTeams] = useState([]);
@@ -40,20 +41,15 @@ const WaitingRoom = ({
     const cancelUsersListener = playersRef.onSnapshot((players) => {
       const currentUsers = [];
       players.forEach((user) => {
-        // if (user.data().team !== null) {
-        //   setPlayersInTeams(playersInTeams + 1);
-        // }
-        if (user.data().isHost) {
-          currentUsers.unshift(user.data());
-          setHost(user.data().username);
-        } else {
-          currentUsers.push(user.data());
-        }
+        currentUsers.push(user.data());
       });
       setUsers(currentUsers);
     });
 
     const cancelGameListener = gameRef.onSnapshot((doc) => {
+      if (doc.data().host.id === firebase.auth().currentUser.uid) {
+        setIsHost(true);
+      }
       if (doc.data().gameIsActive) {
         currentUser.userColour = userColourRef.current;
         cancelUsersListener();
@@ -78,8 +74,6 @@ const WaitingRoom = ({
     });
   }, []);
 
-  useEffect(() => {}, [host, users]);
-
   const handleStart = () => {
     if (teams.length > 0) {
       if (
@@ -95,7 +89,7 @@ const WaitingRoom = ({
       ) {
         alert('there is a team with no one in it');
       } else {
-        alert('there are teams and no one is not in a team');
+        gameRef.update({ gameIsActive: true });
       }
     } else {
       gameRef.update({ gameIsActive: true });

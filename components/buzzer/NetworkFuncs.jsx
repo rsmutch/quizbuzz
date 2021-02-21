@@ -33,8 +33,6 @@ export const joinRoom = (navigation, currentUser, roomCode) => {
                 .set({
                   ...currentUser,
                   score: 0,
-                  isHost: false,
-                  quizMaster: false,
                   team: null
                 });
               navigation.navigate('WaitingRoom', {
@@ -58,17 +56,17 @@ export const joinRoom = (navigation, currentUser, roomCode) => {
 
 export const createRoom = (navigation, currentUser) => {
   const roomCode = generateRoomCode();
-
-  // console.log(currentUser, 'currentUser in NetworkFuncs');
   gamesRef
     .add({
       buzzed: null,
       roomCode,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      gameIsActive: false
+      gameIsActive: false,
+      quizMaster: { username: currentUser.username, id: currentUser.id },
+
+      host: { username: currentUser.username, id: currentUser.id }
     })
     .then((docRef) => {
-      console.log(docRef.id);
       addHost(navigation, currentUser, docRef.id, roomCode);
     })
     .catch((err) => {
@@ -77,8 +75,6 @@ export const createRoom = (navigation, currentUser) => {
 };
 
 export const addHost = (navigation, currentUser, gameId, roomCode) => {
-  console.log(currentUser);
-  console.log(gameId);
   gamesRef
     .doc(gameId)
     .collection('users')
@@ -86,14 +82,11 @@ export const addHost = (navigation, currentUser, gameId, roomCode) => {
     .set({
       ...currentUser,
       score: 0,
-      team: null,
-      isHost: true,
-      quizMaster: true
+      team: null
     });
   navigation.navigate('WaitingRoom', {
     currentUser,
     gameId,
-    roomCode,
-    isHost: true
+    roomCode
   });
 };

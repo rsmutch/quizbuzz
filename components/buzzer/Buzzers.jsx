@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, BackHandler, Alert } from 'react-native';
 import { Button, Portal, Modal } from 'react-native-paper';
 import { firebase } from '../../src/firebaseConfig';
+import ChangeQM from '../ChangeQM';
 import ConfirmExit from '../ConfirmExit';
 import LeaderboardModal from '../LeaderboardModal';
 
@@ -22,8 +23,12 @@ const Buzzers = ({
   const [buzzedUser, setBuzzedUser] = useState({ userColour: 'white' });
   const [hasBuzzed, setHasBuzzed] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [isQM, setIsQM] = useState(false);
+  const [qm, setQM] = useState({});
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showConfirmExit, setShowConfirmExit] = useState(false);
+  const [showChangeQM, setShowChangeQM] = useState(false);
+  const [score, setScore] = useState(0);
 
   const gameRef = firebase.firestore().collection('games').doc(gameId);
   const playersRef = gameRef.collection('users');
@@ -38,15 +43,23 @@ const Buzzers = ({
   };
 
   useEffect(() => {
-    playersRef
-      .doc(firebase.auth().currentUser.uid)
-      .get()
-      .then((doc) => {
-        if (doc.data().isHost) {
-          setIsHost(true);
-        }
-      });
+    gameRef.get().then((doc) => {
+      if (doc.data().host.id === currentUser.id) {
+        setIsHost(true);
+      }
+    });
     const listener = gameRef.onSnapshot((doc) => {
+      const qmUser = doc.data().quizMaster;
+      if (qmUser !== qm) {
+        setQM(qmUser);
+      }
+      if (!isQM && qmUser.id === currentUser.id) {
+        setIsQM(true);
+      } else if (isQM && qmUser.id !== currentUser.id) {
+        setShowChangeQM(false);
+        setIsQM(false);
+      }
+
       const buzzUser = doc.data().buzzed;
       if (buzzUser) {
         setShowLeaderboard(false);
@@ -92,6 +105,14 @@ const Buzzers = ({
     setShowLeaderboard(!showLeaderboard);
   };
 
+  const handleShowConfirmExit = () => {
+    setShowConfirmExit(!showConfirmExit);
+  };
+
+  const handleShowChangeQM = () => {
+    setShowChangeQM(!showChangeQM);
+  };
+
   const handleCorrect = () => {
     playersRef
       .doc(buzzedUser.id)
@@ -101,10 +122,6 @@ const Buzzers = ({
 
   const handleIncorrect = () => {
     gameRef.update({ buzzed: null });
-  };
-
-  const handleShowConfirmExit = () => {
-    setShowConfirmExit(!showConfirmExit);
   };
 
   return (
@@ -123,13 +140,23 @@ const Buzzers = ({
           currentUser={currentUser}
           navigation={navigation}
         />
+        <ChangeQM
+          handleShowChangeQM={handleShowChangeQM}
+          showChangeQM={showChangeQM}
+          gameId={gameId}
+          currentUser={currentUser}
+          setIsQM={setIsQM}
+          isHost={isHost}
+        />
       </Portal>
+      <Text>Quiz Master</Text>
+      <Text>{qm.username}</Text>
       <View style={whoBuzzedContainer}>
         <Text style={styles.whoBuzzed}>
           {buzzedUser.username && buzzedUser.username.toUpperCase()}
         </Text>
       </View>
-      {isHost && (
+      {isQM && (
         <>
           <View style={styles.correctOrNotContainer}>
             <Button
@@ -162,6 +189,15 @@ const Buzzers = ({
           BUZZER
         </Button>
       </View>
+      <Text>QM:{isQM ? 'true' : 'false'}</Text>
+
+      <Text>Host:{isHost ? 'true' : 'false'}</Text>
+      {(isHost || isQM) && (
+        <View style={{ flex: 1 }}>
+          <Text>You are {isHost ? 'host' : 'QM'}</Text>
+          <Button onPress={handleShowChangeQM}>Change QM</Button>
+        </View>
+      )}
     </View>
   );
 };
