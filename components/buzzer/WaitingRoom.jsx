@@ -252,7 +252,11 @@ const WaitingRoom = ({
           />
         </View>
         <View style={{ flex: 1 }}>
-          <Button onPress={() => handleStart()}>Start Game</Button>
+          {isHost ? (
+            <Button onPress={() => handleStart()}>Start</Button>
+          ) : (
+            <Text>Waiting to begin...</Text>
+          )}
         </View>
         <View style={{ flex: 1 }}></View>
       </View>

@@ -127,12 +127,6 @@ const Buzzers = ({
   return (
     <View style={styles.container}>
       <Portal>
-        <LeaderboardModal
-          handleShowLeaderboard={handleShowLeaderboard}
-          showLeaderboard={showLeaderboard}
-          gameId={gameId}
-          currentUser={currentUser}
-        />
         <ConfirmExit
           handleShowConfirmExit={handleShowConfirmExit}
           showConfirmExit={showConfirmExit}
@@ -181,9 +175,7 @@ const Buzzers = ({
           </View>
         </>
       )}
-      <View style={styles.lbToggleContainer}>
-        <Button onPress={handleShowLeaderboard}>Leaderboard</Button>
-      </View>
+      <LeaderboardModal gameId={gameId} currentUser={currentUser} />
       <View style={styles.buzzerBtnContainer}>
         <Button disabled={hasBuzzed} mode="contained" onPress={handleBuzz}>
           BUZZER
@@ -222,7 +214,6 @@ const styles = StyleSheet.create({
     paddingLeft: 15
   },
   endGameBtnContainer: { flex: 1 },
-  lbToggleContainer: { flex: 1 },
   buzzerBtnContainer: { flex: 1 }
 });
 
